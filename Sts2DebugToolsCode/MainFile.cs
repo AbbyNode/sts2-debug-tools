@@ -1,4 +1,5 @@
 using Godot;
+using HarmonyLib;
 using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Runs;
 using Sts2DebugTools.Sts2DebugToolsCode.UI;
@@ -8,16 +9,17 @@ namespace Sts2DebugTools.Sts2DebugToolsCode;
 /// <summary>
 /// Entry point for the STS2 Debug Tools mod.
 ///
-/// Registers a <see cref="RunManager.RunStarted"/> listener that attaches
-/// the <see cref="DebugOverlay"/> to the run scene each time a new run
-/// begins.  The overlay provides:
+/// Applies Harmony patches and registers a <see cref="RunManager.RunStarted"/>
+/// listener that attaches the <see cref="DebugOverlay"/> to the run scene each
+/// time a new run begins.  The mod provides:
 /// <list type="bullet">
 ///   <item><description>
-///     <b>Win Battle</b> – instantly wins the current combat.
+///     <b>Win Battle</b> – instantly wins the current combat (button shown
+///     during combat via <see cref="DebugOverlay"/>).
 ///   </description></item>
 ///   <item><description>
-///     <b>Teleport to Room</b> – opens a dialog to jump to any room on the
-///     current act's map.
+///     <b>Map Teleport</b> – click any room on the map to teleport there
+///     (enabled via <see cref="Features.MapDebugTravelPatch"/>).
 ///   </description></item>
 /// </list>
 /// </summary>
@@ -31,6 +33,9 @@ public partial class MainFile : Node
 
     public static void Initialize()
     {
+        var harmony = new Harmony(ModId);
+        harmony.PatchAll(typeof(MainFile).Assembly);
+
         RunManager.Instance.RunStarted += OnRunStarted;
 
         Logger.Info("STS2 Debug Tools mod initialized.");
