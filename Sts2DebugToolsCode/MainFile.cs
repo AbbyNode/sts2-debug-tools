@@ -2,7 +2,7 @@ using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Modding;
 using MegaCrit.Sts2.Core.Runs;
-using Sts2DebugTools.Sts2DebugToolsCode.UI;
+using Sts2DebugTools.Sts2DebugToolsCode.Features;
 
 namespace Sts2DebugTools.Sts2DebugToolsCode;
 
@@ -10,16 +10,16 @@ namespace Sts2DebugTools.Sts2DebugToolsCode;
 /// Entry point for the STS2 Debug Tools mod.
 ///
 /// Applies Harmony patches and registers a <see cref="RunManager.RunStarted"/>
-/// listener that attaches the <see cref="DebugOverlay"/> to the run scene each
+/// listener that attaches the right-click-to-kill handler to the run scene each
 /// time a new run begins.  The mod provides:
 /// <list type="bullet">
 ///   <item><description>
-///     <b>Win Battle</b> – instantly wins the current combat (button shown
-///     during combat via <see cref="DebugOverlay"/>).
+///     <b>Right-click to kill</b> – right-click any primary enemy during combat
+///     to instantly kill it (handled by <see cref="ClickToKillHandler"/>).
 ///   </description></item>
 ///   <item><description>
 ///     <b>Map Teleport</b> – click any room on the map to teleport there
-///     (enabled via <see cref="Features.MapDebugTravelPatch"/>).
+///     (enabled via <see cref="MapDebugTravelPatch"/>).
 ///   </description></item>
 /// </list>
 /// </summary>
@@ -43,6 +43,6 @@ public partial class MainFile : Node
 
     private static void OnRunStarted(RunState _)
     {
-        DebugOverlay.CreateAndAttach();
+        ClickToKillHandler.Attach();
     }
 }
