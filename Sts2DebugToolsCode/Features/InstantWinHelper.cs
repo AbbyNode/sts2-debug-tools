@@ -64,4 +64,32 @@ internal static class InstantWinHelper
         // EndCombatInternal to run and complete the battle normally.
         _ = CombatManager.Instance.CheckWinCondition();
     }
+
+    /// <summary>
+    /// Sets a single enemy's HP to 0, triggers its death event, then asks
+    /// <see cref="CombatManager"/> to evaluate the win condition.
+    /// </summary>
+    internal static void KillSingle(Creature enemy)
+    {
+        if (CurrentHpField == null)
+        {
+            MainFile.Logger.Error("[DebugTools] Could not resolve Creature._currentHp; single-kill aborted.");
+            return;
+        }
+
+        try
+        {
+            CurrentHpField.SetValue(enemy, 0);
+            enemy.InvokeDiedEvent();
+            MainFile.Logger.Info($"[DebugTools] Right-click kill: '{enemy}' defeated.");
+        }
+        catch (Exception ex)
+        {
+            MainFile.Logger.Warn($"[DebugTools] Failed to kill enemy '{enemy}': {ex.Message}");
+            return;
+        }
+
+        // Check win condition in case this was the last primary enemy.
+        _ = CombatManager.Instance.CheckWinCondition();
+    }
 }
