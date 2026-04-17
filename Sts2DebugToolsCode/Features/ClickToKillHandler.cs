@@ -1,8 +1,5 @@
-using System.Reflection;
 using Godot;
-using HarmonyLib;
 using MegaCrit.Sts2.Core.Combat;
-using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 
@@ -14,20 +11,12 @@ namespace Sts2DebugTools.Sts2DebugToolsCode.Features;
 /// An invisible <see cref="InputListenerNode"/> is attached to <see cref="NRun"/>
 /// for each run.  When a right mouse button press is detected while combat is in
 /// progress, the code searches the scene tree for an <see cref="NCreature"/> node
-/// whose <c>_isCreatureHovered</c> field is <see langword="true"/>, then kills
-/// the underlying primary enemy via <see cref="InstantWinHelper.KillSingle"/>.
+/// whose <see cref="NCreature.IsFocused"/> property is <see langword="true"/>, then
+/// kills the underlying primary enemy via <see cref="InstantWinHelper.KillSingle"/>.
 /// </summary>
 internal static class ClickToKillHandler
 {
     private const string ListenerNodeName = "DebugToolsClickToKill";
-
-    /// <summary>Cached handle for the private <c>NCreature._isCreatureHovered</c> field.</summary>
-    private static readonly FieldInfo? IsCreatureHoveredField =
-        AccessTools.Field(typeof(NCreature), "_isCreatureHovered");
-
-    /// <summary>Cached handle for the <c>NCreature._creature</c> backing field.</summary>
-    private static readonly FieldInfo? NCreatureField =
-        AccessTools.Field(typeof(NCreature), "_creature");
 
     private static InputListenerNode? _listener;
 
@@ -42,18 +31,6 @@ internal static class ClickToKillHandler
     internal static void Attach()
     {
         Detach();
-
-        if (IsCreatureHoveredField == null)
-        {
-            MainFile.Logger.Warn("[DebugTools] Could not resolve NCreature._isCreatureHovered; right-click-to-kill disabled.");
-            return;
-        }
-
-        if (NCreatureField == null)
-        {
-            MainFile.Logger.Warn("[DebugTools] Could not resolve NCreature._creature; right-click-to-kill disabled.");
-            return;
-        }
 
         var runRoot = NRun.Instance;
         if (runRoot == null)
@@ -99,10 +76,10 @@ internal static class ClickToKillHandler
             if (node is not NCreature nc)
                 continue;
 
-            if (IsCreatureHoveredField!.GetValue(nc) is not true)
+            if (!nc.IsFocused)
                 continue;
 
-            var creature = NCreatureField!.GetValue(nc) as Creature;
+            var creature = nc.Entity;
             if (creature == null || !creature.IsPrimaryEnemy || !creature.IsAlive)
                 continue;
 
