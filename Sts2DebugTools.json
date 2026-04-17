@@ -1,0 +1,11 @@
+{
+  "id": "Sts2DebugTools",
+  "name": "STS2 Debug Tools",
+  "author": "AbbyNode",
+  "description": "Debug tools for Slay the Spire 2: instantly win a battle, and teleport to any room on the current act's map.",
+  "version": "v0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "dependencies": ["BaseLib"],
+  "affects_gameplay": true
+}

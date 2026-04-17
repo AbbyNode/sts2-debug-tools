@@ -1,0 +1,104 @@
+name: Build and Zip Mod
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump minor version
+        id: bump_version
+        run: |
+          CURRENT=$(jq -re '.version' Sts2DebugTools.json)
+          VERSION=${CURRENT#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          NEW_MINOR=$((MINOR + 1))
+          NEW_VERSION="v${MAJOR}.${NEW_MINOR}.0"
+          jq --arg v "$NEW_VERSION" '.version = $v' Sts2DebugTools.json > tmp.json && mv tmp.json Sts2DebugTools.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Sts2DebugTools.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: bump minor version to ${NEW_VERSION} [skip ci]"
+            git push
+          fi
+          echo "tag=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Cache .NET SDK
+        id: cache-dotnet-sdk
+        uses: actions/cache@v4
+        with:
+          path: ~/.dotnet
+          key: dotnet-sdk-9.0.x-${{ runner.os }}
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        env:
+          DOTNET_INSTALL_DIR: ~/.dotnet
+        with:
+          dotnet-version: '9.0.x'
+          cache: true
+          cache-dependency-path: '**/*.csproj'
+
+      - name: Cache Godot
+        id: cache-godot
+        uses: actions/cache@v4
+        with:
+          path: godot_dir
+          key: godot-4.5.1-stable-mono-linux-x86_64
+
+      - name: Download Godot 4.5.1 mono
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_mono_linux_x86_64.zip" -O godot.zip
+          unzip -q godot.zip -d godot_dir
+
+      - name: Setup Godot binary path
+        run: |
+          GODOT_BIN=$(find godot_dir -type f -name "*.x86_64" | head -1)
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$(realpath "$GODOT_BIN")" >> $GITHUB_ENV
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Publish mod
+        run: |
+          mkdir -p /tmp/mods/Sts2DebugTools
+          dotnet publish -c Release \
+            /p:ModsPath=/tmp/mods/ \
+            /p:GodotPath="$GODOT_BIN"
+
+      - name: Create zip archive
+        run: |
+          mkdir -p dist
+          cp -r /tmp/mods/Sts2DebugTools dist/
+          cd dist
+          zip -r Sts2DebugTools.zip Sts2DebugTools/
+
+      - name: Upload artifact
+        if: false
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sts2DebugTools
+          path: dist/Sts2DebugTools.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump_version.outputs.tag }}
+          name: Sts2DebugTools ${{ steps.bump_version.outputs.tag }}
+          generate_release_notes: true
+          make_latest: true
+          files: dist/Sts2DebugTools.zip
