@@ -27,6 +27,7 @@ namespace Sts2DebugTools.Sts2DebugToolsCode.UI;
 internal static class DebugOverlay
 {
     private const string OverlayNodeName = "DebugToolsOverlay";
+    private const int OverlayCanvasLayer = 100;
 
     private static CanvasLayer? _canvasLayer;
     private static Control? _root;
@@ -57,7 +58,7 @@ internal static class DebugOverlay
         _canvasLayer = new CanvasLayer
         {
             Name = OverlayNodeName,
-            Layer = 100,
+            Layer = OverlayCanvasLayer,
         };
 
         // ------------------------------------------------------------------
