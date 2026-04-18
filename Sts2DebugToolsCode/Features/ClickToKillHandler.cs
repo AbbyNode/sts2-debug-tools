@@ -64,7 +64,7 @@ internal static class ClickToKillHandler
     /// </summary>
     internal static void TryKillHoveredEnemy()
     {
-        if (!CombatManager.Instance.IsInProgress)
+        if (CombatManager.Instance?.IsInProgress != true)
             return;
 
         var runRoot = NRun.Instance;
@@ -111,7 +111,16 @@ internal partial class InputListenerNode : Node
 {
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right })
+        if (@event is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right })
+            return;
+
+        try
+        {
             ClickToKillHandler.TryKillHoveredEnemy();
+        }
+        catch (Exception ex)
+        {
+            MainFile.Logger.Warn($"[DebugTools] Click-to-kill handler error: {ex.Message}");
+        }
     }
 }

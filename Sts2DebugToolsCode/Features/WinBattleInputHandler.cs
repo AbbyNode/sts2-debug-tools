@@ -55,10 +55,17 @@ internal partial class WinBattleListenerNode : Node
 {
     public override void _UnhandledKeyInput(InputEvent @event)
     {
-        if (@event is InputEventKey { Pressed: true, Keycode: Key.F5 }
-            && CombatManager.Instance.IsInProgress)
+        if (@event is not InputEventKey { Pressed: true, Keycode: Key.F5 })
+            return;
+
+        try
         {
-            InstantWinHelper.Execute();
+            if (CombatManager.Instance?.IsInProgress == true)
+                InstantWinHelper.Execute();
+        }
+        catch (Exception ex)
+        {
+            MainFile.Logger.Warn($"[DebugTools] Win-Battle key handler error: {ex.Message}");
         }
     }
 }
