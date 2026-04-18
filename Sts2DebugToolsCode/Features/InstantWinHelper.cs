@@ -22,7 +22,7 @@ internal static class InstantWinHelper
     /// </summary>
     internal static void Execute()
     {
-        if (!CombatManager.Instance.IsInProgress)
+        if (CombatManager.Instance?.IsInProgress != true)
         {
             MainFile.Logger.Warn("[DebugTools] InstantWin called but no combat is in progress.");
             return;
@@ -34,7 +34,7 @@ internal static class InstantWinHelper
             return;
         }
 
-        var state = CombatManager.Instance.DebugOnlyGetState();
+        var state = CombatManager.Instance?.DebugOnlyGetState();
         if (state == null)
         {
             MainFile.Logger.Warn("[DebugTools] CombatState is null; instant win aborted.");
@@ -62,7 +62,7 @@ internal static class InstantWinHelper
         // Fire-and-forget: ask CombatManager to evaluate the win condition.
         // IsEnding will now return true (no alive primary enemies), causing
         // EndCombatInternal to run and complete the battle normally.
-        _ = CombatManager.Instance.CheckWinCondition();
+        _ = CombatManager.Instance?.CheckWinCondition();
     }
 
     /// <summary>
@@ -90,6 +90,6 @@ internal static class InstantWinHelper
         }
 
         // Check win condition in case this was the last primary enemy.
-        _ = CombatManager.Instance.CheckWinCondition();
+        _ = CombatManager.Instance?.CheckWinCondition();
     }
 }
