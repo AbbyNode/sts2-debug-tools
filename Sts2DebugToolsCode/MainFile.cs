@@ -9,10 +9,16 @@ namespace Sts2DebugTools.Sts2DebugToolsCode;
 /// <summary>
 /// Entry point for the STS2 Debug Tools mod.
 ///
-/// Applies Harmony patches and registers a <see cref="RunManager.RunStarted"/>
-/// listener that attaches the right-click-to-kill handler to the run scene each
-/// time a new run begins.  The mod provides:
+/// Applies Harmony patches, attaches a global <see cref="WinBattleInputHandler"/>
+/// key listener, and registers a <see cref="RunManager.RunStarted"/> listener
+/// that attaches the right-click-to-kill handler to the run scene each time a
+/// new run begins.  The mod provides:
 /// <list type="bullet">
+///   <item><description>
+///     <b>Win Battle (F5)</b> – press <c>F5</c> during combat to instantly kill
+///     all primary enemies and trigger the normal victory flow (handled by
+///     <see cref="WinBattleInputHandler"/> / <see cref="InstantWinHelper"/>).
+///   </description></item>
 ///   <item><description>
 ///     <b>Right-click to kill</b> – right-click any primary enemy during combat
 ///     to instantly kill it (handled by <see cref="ClickToKillHandler"/>).
@@ -36,6 +42,7 @@ public partial class MainFile : Node
         var harmony = new Harmony(ModId);
         harmony.PatchAll(typeof(MainFile).Assembly);
 
+        WinBattleInputHandler.Attach();
         RunManager.Instance.RunStarted += OnRunStarted;
 
         Logger.Info("STS2 Debug Tools mod initialized.");
